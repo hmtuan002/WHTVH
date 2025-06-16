@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTB-C | Chatbot AI Văn Học, Nghệ Thuật</title>
+    <title>TLC-g1 | Chatbot AI Văn Học</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -234,7 +234,7 @@
         <div class="flex-1 flex flex-col h-full overflow-hidden">
 
             <header class="p-4 border-b border-gray-200 bg-white">
-                <h1 class="text-xl font-semibold text-left">CTB-C | Chatbot AI Văn Học, Nghệ Thuật</h1>
+                <h1 class="text-xl font-semibold text-left">TLC-g1 | Chatbot AI Văn Học</h1>
             </header>
             
 
@@ -329,7 +329,7 @@ function isLiteraryQuestion(question) {
     if (!isLiteraryQuestion(userInput)) {
         return {
             success: false,
-            message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học và nghệ thuật, bạn có câu hỏi nào liên quan đến văn học và nghệ thuật muốn hỏi tôi không?"
+            message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học muốn hỏi tôi không?"
         };
     }
     try {
@@ -338,7 +338,7 @@ function isLiteraryQuestion(question) {
     } catch (error) {
         console.error("API Error:", error);
         if (error.message.includes("không thuộc chủ đề")) {
-            addMessageToUI("assistant", "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học và nghệ thuật, bạn có câu hỏi nào liên quan đến văn học và nghệ thuật mà muốn hỏi tôi không?");
+            addMessageToUI("assistant", "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?");
         } else {
             throw new Error("Lỗi kết nối 221!");
         }
@@ -350,7 +350,7 @@ function isLiteraryQuestion(question) {
    if (!isLiteraryQuestion(userInput)) {
         return {
             success: false,
-            message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học và nghệ thuật, bạn có câu hỏi nào liên quan đến văn học và nghệ thuật mà muốn hỏi tôi không?"
+            message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?"
         };
     }
                 await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
@@ -369,7 +369,7 @@ function isLiteraryQuestion(question) {
                 ];
                 
                 const randomResponse = literaryResponses[Math.floor(Math.random() * literaryResponses.length)];
-                const enhancedResponse = `${randomResponse}\n\nĐây là phân tích từ hệ thống AI Văn Học, Nghệ Thuật CTB-C, kết nối từ https://ndcuti-aivanhocg1.hf.space`;
+                const enhancedResponse = `${randomResponse}\n\nĐây là phân tích từ hệ thống AI Văn Học TLC-g1, kết nối từ https://ndcuti-aivanhocg1.hf.space`;
                 
                 return {
                     success: true,
@@ -465,7 +465,7 @@ function setupEventListeners() {
     if (!userMessage || isSending) return;
 
     if (!isLiteraryQuestion(userMessage)) {
-        addMessageToUI("assistant", "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học và nghệ thuật, bạn có câu hỏi nào liên quan đến văn học và nghệ thuật mà muốn hỏi tôi không?");
+        addMessageToUI("assistant", "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?");
         messageInput.value = "";
         autoResizeTextarea();
         return;
@@ -485,7 +485,7 @@ function setupEventListeners() {
     addMessageToUI("user", userMessage);
     const greetings = ["chào", "hello"];
 if (greetings.some(greet => userMessage.toLowerCase().includes(greet))) {
-    const greetingResponse = "Xin chào, tôi là AI CTB-C được tạo ra bởi Hoàng Minh Tuấn và Trương Viết Duy Chương đến từ trường THPT Thừa Lưu. Tôi có thể giúp gì cho bạn ngay bây giờ?";
+    const greetingResponse = "Xin chào, tôi là AI TLC-g1 được tạo ra bởi Hoàng Minh Tuấn và Trương Viết Duy Chương đến từ trường THPT Thừa Lưu. Tôi có thể giúp gì cho bạn ngay bây giờ?";
     displayTypingMessage(greetingResponse, () => {
         if (!isStopped) {
             currentChat.messages.push({ 
