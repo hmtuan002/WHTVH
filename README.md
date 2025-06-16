@@ -1,6 +1,6 @@
 # WHTVH - Website Hỗ Trợ Văn Học
 
-![WHTVH Banner](https://via.placeholder.com/1200x400?text=WHTVH+-+Website+Hỗ+Trợ+Văn+Học)
+![WHTVH Banner](https://images.unsplash.com/photo-1455390582262-044cdead277a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=400&q=80)
 
 Dự án Website hỗ trợ học tập và giảng dạy môn Ngữ Văn, được phát triển bởi Hoàng Minh Tuấn và Trương Viết Duy Chương - Trường THPT Thừa Lưu, Huế.
 
@@ -45,12 +45,28 @@ WHTVH là nền tảng số hóa hỗ trợ tiếp cận văn học, giúp:
 - Gợi ý cải thiện kỹ năng viết
 
 ## 🛠 Công nghệ sử dụng
-- Frontend: HTML5, CSS3, JavaScript
-- Backend: Python/Node.js (tùy phiên bản)
-- AI: GPT/NLP cho phân tích văn học
-- Database: SQLite/MySQL
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Backend**: Python/Node.js
+- **AI**: GPT/NLP cho phân tích văn học
+- **Database**: Google Firebase, Hugging Face
 
-## 📥 Cài đặt & Sử dụng
-1. Clone repository:
-```bash
-git clone https://github.com/[username]/WHTVH.git
+## 👨‍💻 Tác giả
+- **Hoàng Minh Tuấn** - Phát triển frontend, ý tưởng & xử lý backend, AI
+- **Trương Viết Duy Chương** - Xử lý frontend, ý tưởng
+
+Giáo viên hướng dẫn: [Tên giáo viên] - Trường THPT Thừa Lưu, Huế
+
+## 📜 Giấy phép
+Dự án được phát triển với mục đích giáo dục, mã nguồn mở.
+
+## 🙏 Ghi nhận
+Dự án được thực hiện với sự hỗ trợ từ:
+- HỘI THANH NIÊN TRẺ TIẾP BƯỚC trường THPT Thừa Lưu, thành phố Huế
+
+## 📌 Liên hệ
+Hoàng Minh Tuấn:
++ Số điện thoại: 0796545052
++ Email: hoangminhtuan09032009@gmail.com
+Trương Viết Duy Chương:
++ Số điện thoại: 0562732483
++ Email: duychuong14032009@gmail.com
