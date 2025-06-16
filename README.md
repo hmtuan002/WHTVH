@@ -64,9 +64,9 @@ Dự án được thực hiện với sự hỗ trợ từ:
 - HỘI THANH NIÊN TRẺ TIẾP BƯỚC trường THPT Thừa Lưu, thành phố Huế
 
 ## 📌 Liên hệ
-Hoàng Minh Tuấn:
+- Hoàng Minh Tuấn:
 + Số điện thoại: 0796545052
 + Email: hoangminhtuan09032009@gmail.com
-Trương Viết Duy Chương:
+- Trương Viết Duy Chương:
 + Số điện thoại: 0562732483
 + Email: duychuong14032009@gmail.com
