@@ -16,9 +16,10 @@
             background-color: #f5f5f5;
         }
         #map {
-            flex: 3;
+            flex: 1;
             height: 100%;
             background-color: #e8f4f8;
+            transition: margin-left 0.3s ease;
         }
         #sidebar {
             width: 350px;
@@ -58,7 +59,7 @@
             margin-bottom: 25px;
         }
         .search-container input, .filter-container select {
-            width: 90%;
+            width: 100%;
             padding: 12px 15px;
             font-size: 16px;
             border: 1px solid #ddd;
@@ -150,7 +151,7 @@
             top: 20px;
             left: 370px;
             z-index: 1000;
-            background-color:rgba(0, 120, 168, 0);
+            background-color: #0078A8;
             color: white;
             border: none;
             padding: 12px;
@@ -162,12 +163,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
         #toggleSidebar:hover {
-            background-color: rgba(0, 120, 168, 0);
+            background-color: #005f8a;
             transform: scale(1.05);
+        }
+        #toggleSidebar.hidden {
+            left: 20px;
         }
         .loading-spinner {
             display: inline-block;
@@ -366,7 +370,6 @@
     </style>
 </head>
 <body>
-    <div id="map"></div>
     <div id="sidebar">
         <div class="control-panel">
             <button id="toggleModeBtn" class="control-btn secondary">Chế độ tìm hiểu liên hệ</button>
@@ -394,7 +397,9 @@
         <div id="historyInfo" class="history-info"></div>
     </div>
     
-    <button id="toggleSidebar"></button>
+    <div id="map"></div>
+    
+    <button id="toggleSidebar"><i class="fas fa-bars"></i></button>
     
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
@@ -4453,7 +4458,6 @@
                 countryLayer.getElement().classList.add('country-highlight');
                 
                 historyInfo.innerHTML = `
-
                         <h2>Văn học ${countryName} <span class="close-btn" onclick="closeHistoryInfo()">×</span></h2>
                         <p>${historyData[countryName]?.history || "No literary history information available for this country."}</p>
                 `;
@@ -4857,7 +4861,8 @@
         toggleSidebarBtn.addEventListener('click', () => {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('hidden');
-            toggleSidebarBtn.style.left = sidebar.classList.contains('hidden') ? '20px' : '370px';
+            toggleSidebarBtn.classList.toggle('hidden');
+            document.getElementById('map').style.marginLeft = sidebar.classList.contains('hidden') ? '-500px' : '0px';
         });
 
         toggleModeBtn.addEventListener('click', toggleConnectionMode);
