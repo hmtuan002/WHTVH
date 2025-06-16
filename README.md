@@ -65,8 +65,8 @@ Dự án được thực hiện với sự hỗ trợ từ:
 
 ## 📌 Liên hệ
 - Hoàng Minh Tuấn:
-+ Số điện thoại: 0796545052
-+ Email: hoangminhtuan09032009@gmail.com
+Số điện thoại: 0796545052
+Email: hoangminhtuan09032009@gmail.com
 - Trương Viết Duy Chương:
-+ Số điện thoại: 0562732483
-+ Email: duychuong14032009@gmail.com
+Số điện thoại: 0562732483
+Email: duychuong14032009@gmail.com
