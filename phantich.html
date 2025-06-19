@@ -55,32 +55,31 @@
         }
 
         function verifyAIOutput(type, inputText, aiOutput) {
-            let correctedOutput = aiOutput;
+    let correctedOutput = aiOutput;
 
-            if (type === 'textType') {
-                const lines = inputText.split(/\n+/).filter(line => line.trim() !== '');
-                const wordCounts = lines.map(line => line.split(/\s+/).filter(word => word.trim() !== "").length);
-                const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
+    if (type === 'textType') {
+        const lines = inputText.split(/\n+/).filter(line => line.trim() !== '');
+        const wordCounts = lines.map(line => line.split(/\s+/).filter(word => word.trim() !== "").length);
+        const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
 
-                const isProverb = lines.length === 1 && wordCounts[0] <= 10 && inputText.match(/^(?:[A-Z][^.!?]*[.!?]?)$/);
-                const isFolkSong = lines.length <= 4 && wordCounts.every(count => count >= 4 && count <= 8) && totalWords <= 30;
-                const isPoem = wordCounts.every(count => [4, 5, 6, 7, 8].includes(count)) || 
-                               (lines.length >= 2 && wordCounts[0] === 6 && wordCounts[1] === 8) ||
-                               (wordCounts[0] === 7 && wordCounts[1] === 7 && wordCounts[2] === 6 && wordCounts[3] === 8);
+        // Kiểm tra thơ trước khi kiểm tra ca dao
+        const isPoem = wordCounts.every(count => [4, 5, 6, 7, 8].includes(count)) || 
+                       (lines.length >= 2 && wordCounts[0] === 6 && wordCounts[1] === 8) ||
+                       (wordCounts[0] === 7 && wordCounts[1] === 7 && wordCounts[2] === 6 && wordCounts[3] === 8) ||
+                       (lines.length === 4 && wordCounts.every(count => count === 7)); // Thêm điều kiện cho thơ 4 câu 7 chữ
 
-                const expectedType = isProverb ? 'tục ngữ' : 
-                                    isFolkSong ? 'ca dao' : 
-                                    isPoem ? 'thơ' : 
-                                    'không phải thơ, ca dao, tục ngữ';
+        const isProverb = lines.length === 1 && wordCounts[0] <= 10 && inputText.match(/^(?:[A-Z][^.!?]*[.!?]?)$/);
+        const isFolkSong = !isPoem && lines.length <= 4 && wordCounts.every(count => count >= 4 && count <= 8) && totalWords <= 30;
 
-                if (aiOutput.toLowerCase() !== expectedType) {
-                    correctedOutput = expectedType;
-                }
-            } else if (type === 'poemTitle') {
-                if (aiOutput === 'Không xác định được' && inputText.length > 50) {
-                    correctedOutput = 'Không xác định được (đã kiểm tra)';
-                }
-            } else if (type === 'contentAnalysis' || type === 'artisticAnalysis') {
+        const expectedType = isPoem ? 'thơ' : 
+                            isProverb ? 'tục ngữ' : 
+                            isFolkSong ? 'ca dao' : 
+                            'không phải thơ, ca dao, tục ngữ';
+
+        if (aiOutput.toLowerCase() !== expectedType) {
+            correctedOutput = expectedType;
+        }
+    } else if (type === 'contentAnalysis' || type === 'artisticAnalysis') {
                 const sections = aiOutput.split('<br>').filter(line => line.includes('<strong'));
                 const expectedSections = type === 'contentAnalysis' ? 
                     ['Ý nghĩa', 'Cảm xúc', 'Chủ đề chính'] : 
