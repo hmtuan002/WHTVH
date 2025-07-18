@@ -418,6 +418,39 @@
         opacity: 0;
     }
 }
+.user-location-marker {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.user-location-marker svg {
+    animation: ripple 2s infinite;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
     </style>
 </head>
 <body>
@@ -4323,7 +4356,6 @@
         const author2Selection = document.getElementById('author2Selection');
         const checkConnectionBtn = document.getElementById('checkConnectionBtn');
         const connectionResult = document.getElementById('connectionResult');
-// Icon đẹp hơn cho vị trí người dùng
 const userLocationIcon = L.divIcon({
     className: 'user-location-marker',
     html: `
@@ -4339,7 +4371,7 @@ const userLocationIcon = L.divIcon({
     iconSize: [24, 24],
     iconAnchor: [12, 12]
 });
-
+let isTrackingLocation = false;
         let selectedCountryLayer = null;
         let countryLayers = {};
         const markers = [];
@@ -4350,63 +4382,23 @@ const userLocationIcon = L.divIcon({
         let currentAuthorMarker = null;
 let userLocationMarker = null;
 let watchId = null;
+// Cập nhật hàm showUserLocation
 function showUserLocation() {
     if (navigator.geolocation) {
+        // Dừng theo dõi cũ nếu có
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+        
+        // Lấy vị trí hiện tại
         navigator.geolocation.getCurrentPosition(
             function(position) {
-                const userLatLng = [position.coords.latitude, position.coords.longitude];
+                updateUserLocation(position);
                 
-                // Xóa marker cũ nếu có
-                if (userLocationMarker) {
-                    map.removeLayer(userLocationMarker);
-                }
-                
-                // Tạo marker mới với icon cải tiến
-                userLocationMarker = L.marker(userLatLng, {
-                    icon: userLocationIcon,
-                    zIndexOffset: 1000
-                }).addTo(map);
-                
-                // Thêm popup chi tiết
-                const accuracy = position.coords.accuracy;
-                userLocationMarker.bindPopup(`
-                    <div style="text-align: center;">
-                        <h3 style="margin: 5px 0; color: #4285F4;">Vị trí của bạn</h3>
-                        <p style="margin: 5px 0;"><strong>Kinh độ:</strong> ${userLatLng[1].toFixed(6)}</p>
-                        <p style="margin: 5px 0;"><strong>Vĩ độ:</strong> ${userLatLng[0].toFixed(6)}</p>
-                        <p style="margin: 5px 0;"><strong>Độ chính xác:</strong> ~${Math.round(accuracy)} mét</p>
-                        <small style="color: #666;">Cập nhật: ${new Date().toLocaleTimeString()}</small>
-                    </div>
-                `).openPopup();
-                
-                // Zoom đến vị trí người dùng với mức zoom phù hợp
-                const zoomLevel = accuracy < 100 ? 16 : accuracy < 500 ? 14 : 12;
-                map.flyTo(userLatLng, zoomLevel);
-                
-                // Cập nhật trạng thái nút
-                document.getElementById('toggleLocationBtn').classList.add('active');
-                document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Ẩn vị trí của tôi';
-                
-                // Tự động đóng popup sau 5 giây
-                setTimeout(() => {
-                    userLocationMarker.closePopup();
-                }, 5000);
+                // Bắt đầu theo dõi liên tục
+                startTracking();
             },
-            function(error) {
-                let errorMessage = "Không thể lấy vị trí của bạn";
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = "Bạn đã từ chối yêu cầu định vị";
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = "Thông tin vị trí không khả dụng";
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = "Yêu cầu định vị đã hết thời gian";
-                        break;
-                }
-                alert(errorMessage);
-            },
+            handleLocationError,
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
@@ -4424,20 +4416,24 @@ function hideUserLocation() {
         map.removeLayer(userLocationMarker);
         userLocationMarker = null;
     }
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+    
     document.getElementById('toggleLocationBtn').classList.remove('active');
     document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Hiển thị vị trí của tôi';
-}
-// Cập nhật hàm toggleUserLocation để hỗ trợ theo dõi
-function toggleUserLocation() {
-    if (userLocationMarker) {
-        hideUserLocation();
-        stopTracking();
-    } else {
-        showUserLocation();
-        startTracking(); // Bật theo dõi nếu cần
-    }
+    isTrackingLocation = false;
 }
 
+// Hàm toggle trạng thái theo dõi
+function toggleUserLocation() {
+    if (isTrackingLocation) {
+        hideUserLocation();
+    } else {
+        showUserLocation();
+    }
+}
         function translateCountryName(countryName) {
             if (countryNameMap[countryName]) {
                 return countryNameMap[countryName];
@@ -4806,33 +4802,80 @@ function toggleUserLocation() {
                 }
             });
         }
-function startTracking() {
-    if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
-            function(position) {
-                const userLatLng = [position.coords.latitude, position.coords.longitude];
-                if (userLocationMarker) {
-                    userLocationMarker.setLatLng(userLatLng);
-                    userLocationMarker.getPopup().setContent(`
-                        <div style="text-align: center;">
-                            <h3 style="margin: 5px 0; color: #4285F4;">Vị trí của bạn</h3>
-                            <p style="margin: 5px 0;"><strong>Kinh độ:</strong> ${userLatLng[1].toFixed(6)}</p>
-                            <p style="margin: 5px 0;"><strong>Vĩ độ:</strong> ${userLatLng[0].toFixed(6)}</p>
-                            <p style="margin: 5px 0;"><strong>Độ chính xác:</strong> ~${Math.round(position.coords.accuracy)} mét</p>
-                            <small style="color: #666;">Cập nhật: ${new Date().toLocaleTimeString()}</small>
-                        </div>
-                    `);
-                }
-            },
-            function(error) {
-                console.error("Lỗi theo dõi vị trí:", error);
-            },
-            {
-                enableHighAccuracy: true,
-                maximumAge: 30000
-            }
-        );
+        // Hàm cập nhật vị trí người dùng
+function updateUserLocation(position) {
+    const userLatLng = [position.coords.latitude, position.coords.longitude];
+    
+    // Nếu chưa có marker, tạo mới
+    if (!userLocationMarker) {
+        userLocationMarker = L.marker(userLatLng, {
+            icon: userLocationIcon,
+            zIndexOffset: 1000,
+            interactive: true // Cho phép tương tác với marker
+        }).addTo(map);
+        
+        // Thêm popup thông tin
+        userLocationMarker.bindPopup(`
+            <div style="text-align: center;">
+                <h3 style="margin: 5px 0; color: #4285F4;">Vị trí của bạn</h3>
+                <p style="margin: 5px 0;"><strong>Kinh độ:</strong> ${userLatLng[1].toFixed(6)}</p>
+                <p style="margin: 5px 0;"><strong>Vĩ độ:</strong> ${userLatLng[0].toFixed(6)}</p>
+                <p style="margin: 5px 0;"><strong>Độ chính xác:</strong> ~${Math.round(position.coords.accuracy)} mét</p>
+                <small style="color: #666;">Cập nhật: ${new Date().toLocaleTimeString()}</small>
+            </div>
+        `);
+    } else {
+        // Cập nhật vị trí marker nếu đã tồn tại
+        userLocationMarker.setLatLng(userLatLng);
     }
+    
+    // Zoom đến vị trí với mức zoom phù hợp
+    const zoomLevel = position.coords.accuracy < 100 ? 16 : 
+                     position.coords.accuracy < 500 ? 14 : 12;
+    map.flyTo(userLatLng, zoomLevel);
+    
+    // Cập nhật UI
+    document.getElementById('toggleLocationBtn').classList.add('active');
+    document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Ẩn vị trí của tôi';
+    isTrackingLocation = true;
+}
+
+// Hàm xử lý lỗi định vị
+function handleLocationError(error) {
+    let errorMessage = "Không thể lấy vị trí của bạn";
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = "Bạn đã từ chối yêu cầu định vị";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = "Thông tin vị trí không khả dụng";
+            break;
+        case error.TIMEOUT:
+            errorMessage = "Yêu cầu định vị đã hết thời gian";
+            break;
+    }
+    alert(errorMessage);
+    
+    // Nếu đang tracking thì dừng lại
+    if (isTrackingLocation) {
+        hideUserLocation();
+    }
+}
+// Hàm bắt đầu theo dõi vị trí
+function startTracking() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+    }
+    
+    watchId = navigator.geolocation.watchPosition(
+        updateUserLocation,
+        handleLocationError,
+        {
+            enableHighAccuracy: true,
+            maximumAge: 30000,
+            timeout: 10000
+        }
+    );
 }
 
 function stopTracking() {
