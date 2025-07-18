@@ -487,39 +487,6 @@
         opacity: 1;
     }
 }
-.user-location-marker {
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 0.8;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.user-location-marker svg {
-    animation: ripple 2s infinite;
-}
-
-@keyframes ripple {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
     </style>
 </head>
 <body>
@@ -623,7 +590,7 @@
         "country": "United Kingdom",
         "connections": []
     },
-    {
+              {
         "id": 2,
         "name": "Jane Austen",
         "bio": "Jane Austen là một tiểu thuyết gia người Anh. Bà nổi tiếng với sáu cuốn tiểu thuyết lấy bối cảnh giới địa chủ trung lưu Anh vào cuối thế kỷ 18. Cốt truyện của Austen thường phản ánh tình cảnh phụ thuộc của người phụ nữ vào hôn nhân như là cứu cánh duy nhất để đảm bảo vị thế xã hội và lợi ích vật chất.",
@@ -3712,6 +3679,7 @@
         "country": "Vietnam",
         "connections": []
     },
+            
     {
         "id": 176,
         "name": "Ma Văn Kháng",
@@ -3736,7 +3704,7 @@
            "United Kingdom": {
                  history: "Văn học Anh có lịch sử lâu đời, bắt đầu từ thời kỳ Trung cổ với các tác phẩm như 'Beowulf', một bản anh hùng ca quan trọng của nền văn học phương Tây. Thời kỳ Phục Hưng chứng kiến sự xuất hiện của William Shakespeare, người được coi là một trong những nhà văn vĩ đại nhất mọi thời đại với những vở kịch như 'Hamlet', 'Macbeth' và 'Othello'. Thế kỷ 19 là thời kỳ hoàng kim của tiểu thuyết Anh với các tác giả như Jane Austen, Charlotte Brontë, Charles Dickens và Thomas Hardy. Thế kỷ 20 chứng kiến sự phát triển mạnh mẽ của văn học hiện đại với các tác giả như Virginia Woolf, George Orwell và J.R.R. Tolkien, tạo nên những tác phẩm có ảnh hưởng sâu rộng."
              },
-             "France": {
+ "France": {
                  history: "Văn học Pháp có một truyền thống phong phú, bắt nguồn từ thời Trung cổ với các tác phẩm như 'La Chanson de Roland'. Trong thế kỷ 17, chủ nghĩa cổ điển phát triển mạnh với Molière và Racine, đặt nền móng cho kịch nói châu Âu. Thế kỷ 19 là thời kỳ đỉnh cao với các phong trào lãng mạn của Victor Hugo, hiện thực của Balzac và tự nhiên của Zola. Văn học Pháp thế kỷ 20 tiếp tục phát triển với chủ nghĩa hiện sinh của Jean-Paul Sartre và Albert Camus, cùng với những tác phẩm hậu hiện đại của Marguerite Duras."
              },
              "Germany": {
@@ -4428,7 +4396,6 @@
         const author2Selection = document.getElementById('author2Selection');
         const checkConnectionBtn = document.getElementById('checkConnectionBtn');
         const connectionResult = document.getElementById('connectionResult');
-// Icon cho vị trí người dùng
 const userLocationIcon = L.divIcon({
     className: 'user-location-marker',
     html: `
@@ -4477,10 +4444,11 @@ function findAuthorsNearUser() {
 
     const maxDistance = 50; // Bán kính tìm kiếm 50km
     
-    // Xóa layer cũ nếu có
+    // Xóa các marker cũ nếu có
     if (window.nearbyAuthorsLayer) {
         map.removeLayer(window.nearbyAuthorsLayer);
     }
+    window.nearbyAuthorsLayer = L.layerGroup().addTo(map);
     
     // Tìm các tác giả trong phạm vi
     const nearbyAuthors = authors.filter(author => {
@@ -4498,6 +4466,30 @@ function findAuthorsNearUser() {
         return;
     }
     
+    // Tạo marker cho các tác giả gần đó với icon đặc biệt
+    const nearbyIcon = L.divIcon({
+        className: 'nearby-author-marker',
+        html: '<div style="background-color: #28a745; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #28a745;"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+    
+    nearbyAuthors.forEach(author => {
+        const marker = L.marker([author.birthPlace.lat, author.birthPlace.lng], {
+            icon: nearbyIcon
+        }).addTo(window.nearbyAuthorsLayer);
+        
+        marker.on('click', () => {
+            showAuthorInfo(author);
+        });
+    });
+    
+    // Zoom đến khu vực bao gồm các tác giả gần đó
+    const bounds = L.latLngBounds(
+        nearbyAuthors.map(a => [a.birthPlace.lat, a.birthPlace.lng])
+    );
+    map.fitBounds(bounds, { padding: [50, 50] });
+    
     // Hiển thị danh sách tác giả trong sidebar
     sidebar.innerHTML = `
         <h2>Các tác giả gần bạn <span class="close-btn" onclick="closeAuthorInfo()">×</span></h2>
@@ -4505,9 +4497,9 @@ function findAuthorsNearUser() {
         <div style="max-height: 400px; overflow-y: auto;">
             ${nearbyAuthors.map(author => `
                 <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
-                     onclick="showAuthorInfo(${JSON.stringify(author).replace(/"/g, '&quot;')}">
+                     onclick="showAuthorInfo(${JSON.stringify(author).replace(/"/g, '&quot;')})">
                     <div style="display: flex; align-items: center;">
-                        <div style="background-color: #0078A8; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px;"></div>
+                        <div style="background-color: #28a745; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px;"></div>
                         <strong>${author.name}</strong>
                     </div>
                     <div style="margin-left: 20px; font-size: 0.9em; color: #666;">
@@ -4520,14 +4512,8 @@ function findAuthorsNearUser() {
             `).join('')}
         </div>
     `;
-    
-    // Zoom đến khu vực bao gồm vị trí người dùng và các tác giả
-    const bounds = L.latLngBounds([
-        userPosition,
-        ...nearbyAuthors.map(a => [a.birthPlace.lat, a.birthPlace.lng])
-    ]);
-    map.fitBounds(bounds, { padding: [50, 50] });
 }
+
 // Cập nhật hàm showUserLocation để bật nút tìm tác giả gần đó
 function showUserLocation() {
     if (navigator.geolocation) {
@@ -4947,25 +4933,10 @@ function toggleUserLocation() {
                 }
             });
         }
-// Hàm cập nhật vị trí người dùng
+      // Hàm cập nhật vị trí người dùng (chỉ hiển thị thông tin, không hiển thị marker)
 function updateUserLocation(position) {
     const userLatLng = [position.coords.latitude, position.coords.longitude];
-    userPosition = userLatLng;
-    
-    // Cập nhật hoặc tạo marker vị trí người dùng
-    if (!userLocationMarker) {
-        userLocationMarker = L.marker(userLatLng, {
-            icon: userLocationIcon,
-            zIndexOffset: 1000
-        }).addTo(map);
-        
-        // Chỉ zoom khi lần đầu xác định vị trí
-        const zoomLevel = position.coords.accuracy < 100 ? 16 : 
-                         position.coords.accuracy < 500 ? 14 : 12;
-        map.flyTo(userLatLng, zoomLevel);
-    } else {
-        userLocationMarker.setLatLng(userLatLng);
-    }
+    userPosition = userLatLng; // Lưu vị trí người dùng
     
     // Hiển thị thông tin vị trí trong sidebar
     sidebar.innerHTML = `
@@ -4984,10 +4955,18 @@ function updateUserLocation(position) {
         </div>
     `;
     
+    // Bật nút tìm tác giả gần đó
     document.getElementById('findNearbyAuthorsBtn').disabled = false;
+    isTrackingLocation = true;
+    
+    // Zoom đến vị trí với mức zoom phù hợp
+    const zoomLevel = position.coords.accuracy < 100 ? 16 : 
+                     position.coords.accuracy < 500 ? 14 : 12;
+    map.flyTo(userLatLng, zoomLevel);
+    
+    // Cập nhật UI
     document.getElementById('toggleLocationBtn').classList.add('active');
     document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Ẩn vị trí của tôi';
-    isTrackingLocation = true;
 }
 // Hàm xử lý lỗi định vị
 function handleLocationError(error) {
@@ -5025,7 +5004,6 @@ function startTracking() {
             timeout: 10000
         }
     );
-
 }
 
 function stopTracking() {
