@@ -4349,7 +4349,7 @@ const userLocationIcon = L.divIcon({
         let isConnectionMode = false;
         let currentAuthorMarker = null;
 let userLocationMarker = null;
-
+let watchId = null;
 function showUserLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -4427,13 +4427,14 @@ function hideUserLocation() {
     document.getElementById('toggleLocationBtn').classList.remove('active');
     document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Hiển thị vị trí của tôi';
 }
-
-// Hàm toggle hiển thị vị trí
+// Cập nhật hàm toggleUserLocation để hỗ trợ theo dõi
 function toggleUserLocation() {
     if (userLocationMarker) {
         hideUserLocation();
+        stopTracking();
     } else {
         showUserLocation();
+        startTracking(); // Bật theo dõi nếu cần
     }
 }
 
@@ -4805,6 +4806,41 @@ function toggleUserLocation() {
                 }
             });
         }
+function startTracking() {
+    if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+            function(position) {
+                const userLatLng = [position.coords.latitude, position.coords.longitude];
+                if (userLocationMarker) {
+                    userLocationMarker.setLatLng(userLatLng);
+                    userLocationMarker.getPopup().setContent(`
+                        <div style="text-align: center;">
+                            <h3 style="margin: 5px 0; color: #4285F4;">Vị trí của bạn</h3>
+                            <p style="margin: 5px 0;"><strong>Kinh độ:</strong> ${userLatLng[1].toFixed(6)}</p>
+                            <p style="margin: 5px 0;"><strong>Vĩ độ:</strong> ${userLatLng[0].toFixed(6)}</p>
+                            <p style="margin: 5px 0;"><strong>Độ chính xác:</strong> ~${Math.round(position.coords.accuracy)} mét</p>
+                            <small style="color: #666;">Cập nhật: ${new Date().toLocaleTimeString()}</small>
+                        </div>
+                    `);
+                }
+            },
+            function(error) {
+                console.error("Lỗi theo dõi vị trí:", error);
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 30000
+            }
+        );
+    }
+}
+
+function stopTracking() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+}
 
         function resetFilter() {
             centurySlider.value = 5;
