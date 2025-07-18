@@ -451,11 +451,32 @@
         opacity: 0;
     }
 }
+.nearby-author-marker {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div class="control-panel">
+          <button id="findNearbyAuthorsBtn" class="control-btn secondary" onclick="findAuthorsNearUser()" disabled>
+    <i class="fas fa-users"></i> Tìm tác giả gần tôi
+</button>
             <button id="toggleModeBtn" class="control-btn secondary">Chế độ tìm hiểu liên hệ</button>
             
             <div id="connectionMode" class="connection-mode">
@@ -4383,19 +4404,119 @@ let isTrackingLocation = false;
 let userLocationMarker = null;
 let watchId = null;
 // Cập nhật hàm showUserLocation
+// Hàm tính khoảng cách giữa 2 điểm theo km (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Bán kính Trái đất tính bằng km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Hàm tìm các tác giả gần vị trí người dùng
+function findAuthorsNearUser() {
+    if (!userLocationMarker) {
+        alert("Vui lòng bật hiển thị vị trí của bạn trước");
+        return;
+    }
+
+    const userPos = userLocationMarker.getLatLng();
+    const maxDistance = 50; // Bán kính tìm kiếm 50km
+    
+    // Tạo layer group để quản lý các marker tác giả gần đó
+    if (window.nearbyAuthorsLayer) {
+        map.removeLayer(window.nearbyAuthorsLayer);
+    }
+    window.nearbyAuthorsLayer = L.layerGroup().addTo(map);
+    
+    // Tìm các tác giả trong phạm vi
+    const nearbyAuthors = authors.filter(author => {
+        if (!author.birthPlace || !author.birthPlace.lat || !author.birthPlace.lng) return false;
+        
+        const distance = calculateDistance(
+            userPos.lat, userPos.lng,
+            author.birthPlace.lat, author.birthPlace.lng
+        );
+        return distance <= maxDistance;
+    });
+    
+    if (nearbyAuthors.length === 0) {
+        alert("Không có tác giả nào trong phạm vi " + maxDistance + "km từ vị trí của bạn");
+        return;
+    }
+    
+    // Tạo marker cho các tác giả gần đó
+    nearbyAuthors.forEach(author => {
+        const marker = L.marker([author.birthPlace.lat, author.birthPlace.lng], {
+            icon: L.divIcon({
+                className: 'nearby-author-marker',
+                html: '<div style="background-color: #28a745; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #28a745;"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(window.nearbyAuthorsLayer);
+        
+        marker.bindPopup(`
+            <div class="custom-popup">
+                <h3>${author.name}</h3>
+                <p><strong>Khoảng cách:</strong> ${calculateDistance(
+                    userPos.lat, userPos.lng,
+                    author.birthPlace.lat, author.birthPlace.lng
+                ).toFixed(1)} km từ vị trí của bạn</p>
+                <p><strong>Quê quán:</strong> ${author.country}</p>
+                <a href="#" class="popup-link" onclick="event.stopPropagation(); window.showAuthorInfo(${JSON.stringify(author).replace(/"/g, '&quot;')}); return false;">Xem chi tiết</a>
+            </div>
+        `);
+        
+        marker.on('click', () => {
+            showAuthorInfo(author);
+        });
+    });
+    
+    // Zoom đến khu vực bao gồm cả vị trí người dùng và các tác giả
+    const bounds = L.latLngBounds([
+        userPos,
+        ...nearbyAuthors.map(a => [a.birthPlace.lat, a.birthPlace.lng])
+    ]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+    
+    // Hiển thị danh sách tác giả trong sidebar
+    sidebar.innerHTML = `
+        <h2>Các tác giả gần bạn <span class="close-btn" onclick="closeAuthorInfo()">×</span></h2>
+        <p>Có ${nearbyAuthors.length} tác giả trong phạm vi ${maxDistance}km từ vị trí của bạn:</p>
+        <div style="max-height: 400px; overflow-y: auto;">
+            ${nearbyAuthors.map(author => `
+                <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
+                     onclick="showAuthorInfo(${JSON.stringify(author).replace(/"/g, '&quot;')})">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background-color: #28a745; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px;"></div>
+                        <strong>${author.name}</strong>
+                    </div>
+                    <div style="margin-left: 20px; font-size: 0.9em; color: #666;">
+                        Khoảng cách: ${calculateDistance(
+                            userPos.lat, userPos.lng,
+                            author.birthPlace.lat, author.birthPlace.lng
+                        ).toFixed(1)} km
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+
+
+// Cập nhật hàm showUserLocation để bật nút tìm tác giả gần đó
 function showUserLocation() {
     if (navigator.geolocation) {
-        // Dừng theo dõi cũ nếu có
-        if (watchId) {
-            navigator.geolocation.clearWatch(watchId);
-        }
-        
-        // Lấy vị trí hiện tại
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 updateUserLocation(position);
-                
-                // Bắt đầu theo dõi liên tục
+                document.getElementById('findNearbyAuthorsBtn').disabled = false;
                 startTracking();
             },
             handleLocationError,
@@ -4410,11 +4531,16 @@ function showUserLocation() {
     }
 }
 
-// Hàm ẩn vị trí người dùng
+
+// Cập nhật hàm hideUserLocation để tắt nút tìm tác giả gần đó
 function hideUserLocation() {
     if (userLocationMarker) {
         map.removeLayer(userLocationMarker);
         userLocationMarker = null;
+    }
+    if (window.nearbyAuthorsLayer) {
+        map.removeLayer(window.nearbyAuthorsLayer);
+        window.nearbyAuthorsLayer = null;
     }
     if (watchId) {
         navigator.geolocation.clearWatch(watchId);
@@ -4423,6 +4549,7 @@ function hideUserLocation() {
     
     document.getElementById('toggleLocationBtn').classList.remove('active');
     document.getElementById('toggleLocationBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> Hiển thị vị trí của tôi';
+    document.getElementById('findNearbyAuthorsBtn').disabled = true;
     isTrackingLocation = false;
 }
 
