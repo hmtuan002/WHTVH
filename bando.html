@@ -419,7 +419,7 @@
     }
 }
     .nearby-authors {
-        max-height: 300px;
+        max-height: 400px;
         overflow-y: auto;
         margin-top: 15px;
         border-top: 1px solid #eee;
@@ -4414,55 +4414,84 @@ let watchId = null;
         
         return nearbyAuthors;
     }
-
-    // Hàm hiển thị các tác giả gần đó
-    function showNearbyAuthors(nearbyAuthors) {
-        const searchContainer = document.querySelector('.search-container');
-        let nearbyHTML = '';
-        
-        if (nearbyAuthors.length > 0) {
-            nearbyHTML = '<div class="nearby-authors"><h4>Tác giả gần bạn:</h4>';
-            
-            nearbyAuthors.forEach(item => {
-                nearbyHTML += `
-                    <div class="nearby-author" onclick="showAuthorInfo(${JSON.stringify(item.author).replace(/"/g, '&quot;')})">
-                        ${item.author.name}
-                        <span class="distance-badge">${item.distance} km</span>
-                    </div>
-                `;
-            });
-            
-            nearbyHTML += '</div>';
-        } else {
-            nearbyHTML = '<div class="nearby-authors"><p>Không tìm thấy tác giả nào trong bán kính 50km.</p></div>';
-        }
-        
-        // Thêm vào sau thanh tìm kiếm
-        const existingNearby = document.getElementById('nearbyAuthorsSection');
-        if (existingNearby) {
-            existingNearby.innerHTML = nearbyHTML;
-        } else {
-            const nearbySection = document.createElement('div');
-            nearbySection.id = 'nearbyAuthorsSection';
-            nearbySection.innerHTML = nearbyHTML;
-            searchContainer.appendChild(nearbySection);
-        }
+function showNearbyAuthors(nearbyAuthors) {
+    const searchContainer = document.querySelector('.search-container');
+    let nearbyHTML = '';
+    
+    if (nearbyAuthors.length > 0) {
+        nearbyHTML = `
+            <div class="nearby-authors">
+                <h4>Tác giả gần bạn <span class="close-nearby" onclick="closeNearbyAuthors()">×</span></h4>
+                <div class="nearby-list">
+                    ${nearbyAuthors.map(item => `
+                        <div class="nearby-author" onclick="showAuthorInfo(${JSON.stringify(item.author).replace(/"/g, '&quot;')})">
+                            ${item.author.name}
+                            <span class="distance-badge">${item.distance} km</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else {
+        nearbyHTML = `
+            <div class="nearby-authors">
+                <h4>Tác giả gần bạn <span class="close-nearby" onclick="closeNearbyAuthors()">×</span></h4>
+                <p>Không tìm thấy tác giả nào trong bán kính 50km.</p>
+            </div>
+        `;
     }
+    
+    const existingNearby = document.getElementById('nearbyAuthorsSection');
+    if (existingNearby) {
+        existingNearby.innerHTML = nearbyHTML;
+    } else {
+        const nearbySection = document.createElement('div');
+        nearbySection.id = 'nearbyAuthorsSection';
+        nearbySection.innerHTML = nearbyHTML;
+        searchContainer.appendChild(nearbySection);
+    }
+}
 
-    // Hàm tìm và hiển thị tác giả gần vị trí hiện tại
+function closeNearbyAuthors() {
+    const nearbySection = document.getElementById('nearbyAuthorsSection');
+    if (nearbySection) {
+        nearbySection.remove();
+    }
+}
+
     function findAndShowNearbyAuthors() {
-        if (!userLocationMarker) {
-            alert('Vui lòng bật định vị trước khi tìm kiếm tác giả gần bạn.');
-            return;
+    if (!userLocationMarker) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = `
+            <div style="padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 15px;">
+                <p style="margin: 0;">Yêu cầu bạn phải nhấn "Hiển thị vị trí của bạn" trước!</p>
+            </div>
+        `;
+        
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.replaceWith(notification);
+        } else {
+            document.querySelector('.control-panel').appendChild(notification);
         }
         
-        const userLatLng = userLocationMarker.getLatLng();
-        const nearbyAuthors = findAuthorsNearby(userLatLng.lat, userLatLng.lng);
-        showNearbyAuthors(nearbyAuthors);
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
         
-        // Zoom đến khu vực xung quanh
-        map.flyTo(userLatLng, 10);
+        return;
     }
+    
+    const userLatLng = userLocationMarker.getLatLng();
+    const nearbyAuthors = findAuthorsNearby(userLatLng.lat, userLatLng.lng);
+    showNearbyAuthors(nearbyAuthors);
+    
+    // Zoom đến khu vực xung quanh
+    map.flyTo(userLatLng, 10);
+}
 
 function showUserLocation() {
     if (navigator.geolocation) {
@@ -5175,7 +5204,7 @@ function stopTracking() {
         checkConnectionBtn.addEventListener('click', checkConnection);
 
         window.showAuthorInfo = showAuthorInfo;
-        // Thêm nút điều khiển vào control panel
+        
 const locationControl = `
     <button id="toggleLocationBtn" class="control-btn secondary" onclick="toggleUserLocation()">
         <i class="fas fa-location-crosshairs"></i> Hiển thị vị trí của tôi
